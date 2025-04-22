@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>14 Jours de Prières et Gratitude - Au Pays de Marie</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/tailwindcss-jit-cdn"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'sky-light': '#E6F2FB',
+            'sky': '#90CDF4',
+            'sky-dark': '#4299E1',
+            'gold-soft': '#FFE9B0',
+            'gold': '#F5DA7A',
+            'graphite': '#363839',
+            'stone': '#F7F6F3',
+            'note': '#FAF3DD'
+          },
+          fontFamily: {
+            'serif': ['Merriweather', 'serif'],
+            'sans': ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Inter & Merriweather Google Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap">
+  <!-- Tabler Icons CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    body { font-family: Inter, sans-serif; background: #F7F6F3; }
+    textarea::-webkit-input-placeholder { color: #A0AEC0; }
+    textarea:-ms-input-placeholder { color: #A0AEC0; }
+    textarea::placeholder { color: #A0AEC0; }
+    /* Hide scrollbars for day container to optimize for PDF export */
+    ::-webkit-scrollbar {width:0px;height:0px;}
+    [data-day-section] {break-inside: avoid;}
+  </style>
+</head>
+<body class="bg-stone text-graphite min-h-screen w-full antialiased">
+  <main class="max-w-2xl mx-auto px-2 sm:px-0 py-10">
+    <header class="mb-8 flex flex-col items-center text-center">
+      <span class="ti ti-sun text-4xl text-gold mb-2"></span>
+      <h1 class="font-serif text-2xl sm:text-3xl font-bold text-sky-dark mb-2 tracking-tight">14 Jours de Prières et Gratitude</h1>
+      <p class="text-base text-sky-dark font-medium mb-1">Au Pays de Marie</p>
+      <p class="text-graphite text-sm font-light max-w-md mx-auto italic">Une application minimaliste pour vivre 14 jours d'ancrage spirituel, de prière, de méditation et de gratitude. Naviguez jour après jour – chaque étape vous invite à la douceur et à la simplicité.</p>
+    </header>
+    <!-- Diaporama Section -->
+    <section class="w-full">
+      <div class="flex items-center justify-between mb-6 gap-2">
+        <button id="prevBtn" class="rounded-full bg-sky-light hover:bg-sky px-3 py-1 transition border border-sky-dark/10 text-sky-dark disabled:opacity-50" aria-label="Jour précédent">
+          <span class="ti ti-chevron-left text-xl"></span>
+        </button>
+        <div class="flex flex-col items-center flex-1">
+          <div id="days-indicator" class="flex gap-1 my-1"></div>
+          <div class="font-serif text-base font-semibold text-gold px-2 py-1 rounded">{ <span id="currentDay">1</span> / 14 }</div>
+        </div>
+        <button id="nextBtn" class="rounded-full bg-sky-light hover:bg-sky px-3 py-1 transition border border-sky-dark/10 text-sky-dark disabled:opacity-50" aria-label="Jour suivant">
+          <span class="ti ti-chevron-right text-xl"></span>
+        </button>
+      </div>
+      <div id="day-content"></div>
+    </section>
+    <!-- Navigation rapide (boutons sauts jours) -->
+    <nav class="flex flex-wrap gap-1 justify-center mt-5 mb-3 select-none">
+      <span class="text-xs mr-1 font-medium text-gray-400">Aller au jour :</span>
+      <template id="shortcut-btn">
+        <button class="px-2 py-1 rounded bg-white border border-sky/20 text-sky-dark hover:bg-sky-light hover:border-sky/40 transition text-xs font-semibold focus:outline-none" type="button"></button>
+      </template>
+    </nav>
+    <footer class="pt-6 mt-8 border-t border-stone text-center text-xs text-graphite font-light">
+      <div><span class="font-bold text-sky-dark">Au Pays de Marie</span> — 14 jours de prière et gratitude</div>
+      <div>&copy; 2024</div>
+    </footer>
+  </main>
+  <script>
+const prayers = [
+  "Seigneur Jésus, ouvre mon cœur à ta lumière pour que je vive cette journée avec foi et confiance.",
+  "Jésus, apprends-moi la douceur et l’humilité aujourd’hui, à te ressembler toujours davantage.",
+  "Seigneur, donne-moi la paix intérieure afin que je sois un témoin de ton amour.",
+  "Jésus, aide-moi à pardonner comme Tu pardonnes, et à accueillir chacun avec bienveillance.",
+  "Seigneur, donne-moi la force de traverser mes épreuves dans la foi et l’espérance.",
+  "Jésus, inspire-moi la joie simple de suivre ton chemin aujourd’hui.",
+  "Seigneur, enseigne-moi à écouter et à servir humblement ceux qui m’entourent.",
+  "Jésus, accorde-moi ta sagesse pour discerner ce qui est juste et bon.",
+  "Seigneur, purifie mon regard pour que je voie le meilleur en chaque personne.",
+  "Jésus, rends mon cœur attentif à ta volonté et docile à ton Esprit.",
+  "Seigneur, donne-moi le courage d’aimer même dans les difficultés.",
+  "Jésus, accorde-moi d’apporter soutien et réconfort à ceux qui en ont besoin.",
+  "Seigneur, fais de ma vie un témoignage de ta présence et de ta bonté.",
+  "Jésus, je me remets entre tes mains, confiant en ta miséricorde et ton amour."
+];
+const scriptures = [
+  {ref: "Matthieu 5, 14-16", text: "Vous êtes la lumière du monde... Ainsi votre lumière doit-elle briller devant les hommes, afin qu’ils voient vos bonnes œuvres et glorifient votre Père qui est dans les cieux."},
+  {ref: "Jean 13, 34", text: "Je vous donne un commandement nouveau : aimez-vous les uns les autres. Comme je vous ai aimés, aimez-vous les uns les autres."},
+  {ref: "Matthieu 6, 6", text: "Quand tu pries, entre dans ta chambre, ferme la porte et prie ton Père qui est là dans le secret."},
+  {ref: "Luc 6, 36-37", text: "Soyez miséricordieux, comme votre Père est miséricordieux... Pardonnez et vous serez pardonnés."},
+  {ref: "Philippiens 4, 6-7", text: "Ne vous inquiétez de rien, mais en toute circonstance, priez... et la paix de Dieu gardera vos cœurs."},
+  {ref: "Jean 15, 11-12", text: "Je vous ai dit cela pour que ma joie soit en vous... Voici mon commandement : aimez-vous les uns les autres comme je vous ai aimés."},
+  {ref: "Jacques 1, 19", text: "Que chacun de vous soit prompt à écouter, lent à parler, lent à la colère."},
+  {ref: "Romains 12, 2", text: "Ne vous conformez pas au monde présent, mais soyez transformés par le renouvellement de l’intelligence."},
+  {ref: "Matthieu 7, 3", text: "Pourquoi vois-tu la paille qui est dans l’œil de ton frère, et n’aperçois-tu pas la poutre qui est dans ton œil ?"},
+  {ref: "Luc 11, 28", text: "Heureux ceux qui écoutent la parole de Dieu et qui l’observent !"},
+  {ref: "Marc 12, 30-31", text: "Tu aimeras le Seigneur ton Dieu... et tu aimeras ton prochain comme toi-même."},
+  {ref: "2 Corinthiens 1, 3-4", text: "Le Dieu de toute consolation nous console dans toutes nos détresses afin que nous puissions consoler ceux qui traversent toute détresse."},
+  {ref: "Galates 5, 22-23", text: "Le fruit de l’Esprit est amour, joie, paix, patience, bonté, bienveillance, fidélité, douceur, maîtrise de soi."},
+  {ref: "Matthieu 28, 20", text: "Et moi, je suis avec vous tous les jours jusqu’à la fin du monde."}
+];
+const actions = [
+  [
+    "Sourire et dire un mot aimable à une personne croisée dans la journée.",
+    "Prendre 5 minutes en silence pour remercier pour 3 choses simples.",
+    "Écouter attentivement sans interrompre lors d’une conversation."
+  ],
+  [
+    "Aider concrètement quelqu’un, même par un geste simple.",
+    "Lire ou envoyer un message inspirant à une connaissance.",
+    "Faire preuve de patience dans une file ou dans les transports."
+  ],
+  [
+    "Faire un compliment sincère à une personne de votre entourage.",
+    "Écrire une lettre ou un message de gratitude à quelqu’un.",
+    "Offrir un temps d’écoute à une personne qui semble avoir besoin de parler."
+  ],
+  [
+    "Pardonner une petite contrariété ou blessure du jour.",
+    "Prendre contact avec une personne oubliée ou isolée.",
+    "Soutenir une cause ou une association locale, même modestement."
+  ],
+  [
+    "Déposer vos soucis dans la prière, un instant de silence.",
+    "Faire un don – en temps, en paroles ou en objet – à une personne dans le besoin.",
+    "Tenir un journal de gratitude pour saisir les petites joies du jour."
+  ],
+  [
+    "Partager votre bonne humeur dès le matin autour de vous.",
+    "Encourager quelqu’un dans un projet ou une difficulté.",
+    "Prendre une résolution de simplicité pour la journée (moins d’écran, plus de présence)."
+  ],
+  [
+    "Écouter sans juger lors d’une conversation.",
+    "Rendre un service sans rien attendre en retour.",
+    "Faire preuve de délicatesse envers soi-même et les autres."
+  ],
+  [
+    "Adopter un regard neuf sur une situation ou une personne.",
+    "Proposer son aide spontanément.",
+    "Prendre le temps de prier ou méditer sur une décision à venir."
+  ],
+  [
+    "Reconnaître vos propres limites avec bienveillance.",
+    "Accorder un petit geste d’attention à un voisin ou collègue.",
+    "Faire un effort pour voir le positif dans une situation difficile."
+  ],
+  [
+    "Lire un psaume ou un passage biblique de votre choix.",
+    "Donner un coup de main à la maison ou au travail.",
+    "Remercier Dieu pour une bénédiction reçue récemment."
+  ],
+  [
+    "Faire un acte de charité aujourd’hui, même discret.",
+    "Exprimer une gratitude sincère envers une personne proche.",
+    "Accorder votre pardon à quelqu’un, même silencieusement."
+  ],
+  [
+    "Téléphoner à une personne qui traverse une épreuve.",
+    "Déposer une intention dans la prière pour quelqu’un.",
+    "S’intéresser sincèrement à l’état d’âme d’une connaissance."
+  ],
+  [
+    "Écrire dans votre journal trois progrès réalisés dans la semaine.",
+    "Célébrer chaque petite victoire, même intérieure.",
+    "Envoyer des pensées positives à une personne de votre choix."
+  ],
+  [
+    "Remercier le Seigneur pour ces 14 jours de cheminement.",
+    "Partager une leçon apprise avec un proche.",
+    "Faire le bilan de ce que vous souhaitez continuer au quotidien."
+  ]
+];
+
+const days = [];
+for (let i = 0; i < 14; i++) {
+  days.push({
+    num: i + 1,
+    prayer: prayers[i],
+    scripture: scriptures[i],
+    actions: actions[i]
+  });
+}
+
+let currentDay = 0;
+
+// LocalStorage notes by day
+function loadNotes() {
+  try {
+    return JSON.parse(localStorage.getItem('gratitude_notes_14j')) || {};
+  } catch { return {}; }
+}
+function saveNotes(notes) {
+  localStorage.setItem('gratitude_notes_14j', JSON.stringify(notes));
+}
+let notes = loadNotes();
+
+function setTextareaAutoHeight(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = (textarea.scrollHeight+2) + 'px';
+}
+function renderDay() {
+  document.getElementById('currentDay').textContent = (currentDay+1);
+  // Step-indicator dots
+  const indicator = document.getElementById('days-indicator');
+  indicator.innerHTML = '';
+  for (let i = 0; i < 14; ++i) {
+    let dot = document.createElement('span');
+    dot.className = i === currentDay ?
+      "inline-block w-4 h-2 rounded transition bg-gold" :
+      "inline-block w-2 h-2 rounded-full transition bg-sky/30";
+    dot.style.marginRight = "2px";
+    indicator.appendChild(dot);
+  }
+  // Card content
+  const day = days[currentDay];
+  // Notes for this day
+  const noteVal = notes["d"+day.num] || '';
+  let html = `
+    <section data-day-section class="bg-white shadow-sm border border-sky-light rounded-2xl px-5 py-8 sm:py-10 flex flex-col gap-6 animate-fadein mb-3">
+      <div class="flex gap-2 items-center mb-2">
+        <span class="ti ti-sun text-2xl text-gold"></span>
+        <span class="font-serif text-xl text-sky-dark font-bold tracking-tight">Jour ${day.num}</span>
+      </div>
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-1 text-gold">
+          <span class="ti ti-pray"></span>
+          <span class="font-semibold text-graphite text-base">Prière à Jésus</span>
+        </div>
+        <blockquote class="italic pl-3 pr-1 py-1 border-l-4 border-gold bg-sky-light/20 rounded text-graphite">${day.prayer}</blockquote>
+      </div>
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-1 text-sky">
+          <span class="ti ti-book-2"></span>
+          <span class="font-semibold text-graphite text-base">Parole du Nouveau Testament</span>
+        </div>
+        <div class="pl-3 pr-1 py-1 border-l-4 border-sky bg-sky-light/30 rounded">
+          <span class="block italic text-graphite">"${day.scripture.text}"</span>
+          <span class="block text-xs text-sky-dark font-medium mt-1">— ${day.scripture.ref}</span>
+        </div>
+      </div>
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-1 text-gold">
+          <span class="ti ti-sparkles"></span>
+          <span class="font-semibold text-graphite text-base">Actions du jour</span>
+        </div>
+        <ol class="pl-3 list-decimal space-y-1 bg-gold-soft/10 py-2 px-2 rounded text-graphite text-sm sm:text-base">
+          <li>${day.actions[0]}</li>
+          <li>${day.actions[1]}</li>
+          <li>${day.actions[2]}</li>
+        </ol>
+      </div>
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-1 text-sky">
+          <span class="ti ti-feather"></span>
+          <span class="font-semibold text-graphite text-base">Ma gratitude du jour</span>
+        </div>
+        <textarea id="gratitude" rows="2"
+          class="w-full rounded bg-note border border-gold px-3 py-2 mt-1 text-graphite font-serif text-sm outline-none resize-none transition focus:border-sky"
+          placeholder="Notez ici ce pour quoi vous êtes reconnaissant(e)..."
+          >${noteVal}</textarea>
+      </div>
+    </section>
+  `;
+  document.getElementById('day-content').innerHTML = html;
+  // controls enabled/disabled
+  document.getElementById('prevBtn').disabled = currentDay === 0;
+  document.getElementById('nextBtn').disabled = currentDay === 13;
+  // textarea events for save and autoheight
+  let textarea = document.getElementById('gratitude');
+  setTextareaAutoHeight(textarea);
+  textarea.addEventListener('input', function() {
+    notes['d'+day.num] = this.value;
+    saveNotes(notes);
+    setTextareaAutoHeight(this);
+  });
+}
+
+document.getElementById('prevBtn').onclick = () => {
+  if (currentDay > 0) { currentDay--; renderDay(); }
+}
+document.getElementById('nextBtn').onclick = () => {
+  if (currentDay < 13) { currentDay++; renderDay(); }
+}
+
+// Navigation rapide (petits boutons numérotés)
+const nav = document.querySelector('nav');
+for (let i = 0; i < days.length; ++i) {
+  const btn = document.createElement('button');
+  btn.type = "button";
+  btn.textContent = (i+1);
+  btn.className = "px-2 py-1 rounded bg-white border border-sky/20 text-sky-dark hover:bg-sky-light hover:border-sky/40 transition text-xs font-semibold focus:outline-none";
+  btn.onclick = () => { currentDay = i; renderDay(); }
+  nav.appendChild(btn);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  renderDay();
+});
+
+  </script>
+  <style>
+    @keyframes fadein {
+      0% { opacity: 0; transform: translateY(16px);}
+      100% {opacity: 1; transform: none;}
+    }
+    .animate-fadein {
+      animation: fadein 0.5s cubic-bezier(.46,1.48,.56,.88);
+    }
+  </style>
+</body>
+</html>
+
